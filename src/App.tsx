@@ -1,5 +1,5 @@
 import React from "react";
-import JsonRenderer from "./Json";
+import JsonRenderer from "./components/Json";
 import { Card } from "antd";
 
 const data = {
