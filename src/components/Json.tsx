@@ -8,25 +8,20 @@ interface JsonRendererProps {
   isLast?: boolean;
 }
 
-const JsonRenderer: React.FC<JsonRendererProps> = ({
-  data,
-  indent = 0,
-  isLast = true,
-}) => {
-
+const JsonRenderer: React.FC<JsonRendererProps> = ({ data, isLast = true }) => {
   //checks for array and recursively calls with inline element with comma
   if (Array.isArray(data)) {
     return (
-      <span>
+      <div>
         <Text>[</Text>
         {data.map((item, index) => (
-          <span key={index}>
+          <div key={index} style={{ paddingLeft: 20 }}>
             <JsonRenderer data={item} isLast={index === data.length - 1} />
             {!isLast && index !== data.length - 1 && <Text>,</Text>}
-          </span>
+          </div>
         ))}
         <Text>]{!isLast && ","}</Text>
-      </span>
+      </div>
     );
   }
 
@@ -37,7 +32,7 @@ const JsonRenderer: React.FC<JsonRendererProps> = ({
       <div>
         <Text>{"{"}</Text>
         {entries.map(([key, value], index) => (
-          <div key={index} style={{ paddingLeft: (indent + 1) * 15 }}>
+          <div key={index} style={{ paddingLeft: 20 }}>
             <Text>{key}: </Text>
             <JsonRenderer data={value} isLast={index === entries.length - 1} />
           </div>
@@ -61,4 +56,4 @@ const JsonRenderer: React.FC<JsonRendererProps> = ({
   );
 };
 
-export default JsonRenderer
+export default JsonRenderer;
