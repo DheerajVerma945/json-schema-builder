@@ -7,9 +7,13 @@ const data = {
   age: 21,
   address: {
     city: "Delhi",
+    country: {
+      code: "+91",
+      name:"India"
+    },
     pincode: 110001,
   },
-  hobbies: ["music", "coding"],
+  hobbies: ["music", ["CCSU", "Undergraduate", ["12th", "10th"]]],
 };
 
 const App = () => {

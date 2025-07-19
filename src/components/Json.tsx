@@ -13,13 +13,11 @@ const JsonRenderer: React.FC<JsonRendererProps> = ({
   indent = 0,
   isLast = true,
 }) => {
-  //spacing in the left for nested feilds
-  const spacing = { paddingLeft: indent * 10 };
 
-  //checks for array and recursively calls for inline element with comma
+  //checks for array and recursively calls with inline element with comma
   if (Array.isArray(data)) {
     return (
-      <span style={spacing}>
+      <span>
         <Text>[</Text>
         {data.map((item, index) => (
           <span key={index}>
@@ -36,11 +34,11 @@ const JsonRenderer: React.FC<JsonRendererProps> = ({
   if (typeof data === "object" && data !== null) {
     const entries = Object.entries(data);
     return (
-      <div style={spacing}>
+      <div>
         <Text>{"{"}</Text>
         {entries.map(([key, value], index) => (
           <div key={index} style={{ paddingLeft: (indent + 1) * 15 }}>
-            <Text>"{key}":</Text>
+            <Text>{key}: </Text>
             <JsonRenderer data={value} isLast={index === entries.length - 1} />
           </div>
         ))}
@@ -53,12 +51,12 @@ const JsonRenderer: React.FC<JsonRendererProps> = ({
   }
 
   //formatted data for the string and other primitive data types
-  const formattedData = typeof data === "string" ? "data" : String(data);
+  const formattedData = typeof data === "string" ? `"${data}"` : String(data);
 
   return (
     <Text>
       {formattedData}
-      {isLast && ","}
+      {!isLast && ", "}
     </Text>
   );
 };
