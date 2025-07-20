@@ -4,7 +4,8 @@ import StructureBuilder from "./components/Input";
 import JsonRenderer from "./components/Json";
 
 const App = () => {
-  const [data, setData] = useState([]);
+  const [data, setData] = useState({});
+
 
   return (
     <div

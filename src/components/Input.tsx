@@ -1,108 +1,98 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Input, Select, Button, Space, Card } from "antd";
 import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 
 const { Option } = Select;
 
 type FieldType = "String" | "Number" | "Nested";
+type SchemaValue = FieldType | SchemaObject;
+type SchemaObject = { [key: string]: SchemaValue };
 
-interface Field {
-  key: string;
-  type: FieldType;
-  children?: Field[];
+interface StructureBuilderProps {
+  data: SchemaObject;
+  onChange: (data: SchemaObject) => void;
 }
 
-interface Props {
-  data: Field[];
-  onChange: (fields: Field[]) => void;
-}
+const getType = (val: SchemaValue): FieldType =>
+  typeof val === "object" && val !== null ? "Nested" : (val as FieldType);
 
-const StructureBuilder: React.FC<Props> = ({ data, onChange }) => {
-  const [fields, setFields] = useState<Field[]>(data);
+const StructureBuilder: React.FC<StructureBuilderProps> = ({ data, onChange }) => {
+  const [editingKeys, setEditingKeys] = useState<{ [path: string]: string }>({});
 
-  useEffect(() => {
-    setFields(data);
-  }, [data]);
+  function renameField(path: string[], newKey: string) {
+    const pathKey = path.join(".");
+    setEditingKeys(prev => ({ ...prev, [pathKey]: newKey }));
 
-  const update = (updatedFields: Field[]) => {
-    setFields(updatedFields);
-    onChange(updatedFields);
-  };
+    const oldKey = path[path.length - 1];
+    if (newKey === oldKey || !newKey) return;
 
-  const handleFieldChange = (
-    path: number[],
-    key: keyof Field,
-    value: any
-  ) => {
-    const newFields = JSON.parse(JSON.stringify(fields)); // Deep clone
-    let current: any = newFields;
-    for (let i = 0; i < path.length - 1; i++) {
-      current = current[path[i]].children;
-    }
+    const cloned = JSON.parse(JSON.stringify(data));
+    let obj = cloned;
+    for (let i = 0; i < path.length - 1; i++) obj = obj[path[i]];
 
-    const field = current[path[path.length - 1]];
-    field[key] = value;
+    const val = obj[oldKey];
+    delete obj[oldKey];
+    obj[newKey] = val;
 
-    // handle nested type switch
-    if (key === "type") {
-      if (value === "Nested") {
-        field.children = field.children || [];
-      } else {
-        delete field.children;
-      }
-    }
+    setEditingKeys(prev => {
+      const updated = { ...prev };
+      delete updated[pathKey];
+      return updated;
+    });
 
-    update(newFields);
-  };
+    onChange(cloned);
+  }
 
-  const handleAddField = (path: number[]) => {
-    const newFields = JSON.parse(JSON.stringify(fields));
-    let current: any = newFields;
-    for (const idx of path) {
-      current = current[idx].children;
-    }
+  function changeType(path: string[], newType: FieldType) {
+    const cloned = JSON.parse(JSON.stringify(data));
+    let obj = cloned;
+    for (let i = 0; i < path.length - 1; i++) obj = obj[path[i]];
+    const key = path[path.length - 1];
+    obj[key] = newType === "Nested" ? {} : newType;
+    onChange(cloned);
+  }
 
-    current.push({ key: "", type: "String" });
-    update(newFields);
-  };
+  function addField(path: string[]) {
+    const cloned = JSON.parse(JSON.stringify(data));
+    let obj = cloned;
+    for (let i = 0; i < path.length; i++) obj = obj[path[i]];
+    obj[``] = "String";
+    onChange(cloned);
+  }
 
-  const handleDelete = (path: number[]) => {
-    const newFields = JSON.parse(JSON.stringify(fields));
-    if (path.length === 1) {
-      newFields.splice(path[0], 1);
-    } else {
-      let current: any = newFields;
-      for (let i = 0; i < path.length - 2; i++) {
-        current = current[path[i]].children;
-      }
-      const parent = current[path[path.length - 2]];
-      parent.children.splice(path[path.length - 1], 1);
-    }
-    update(newFields);
-  };
+  function removeField(path: string[]) {
+    const cloned = JSON.parse(JSON.stringify(data));
+    let obj = cloned;
+    for (let i = 0; i < path.length - 1; i++) obj = obj[path[i]];
+    delete obj[path[path.length - 1]];
+    onChange(cloned);
+  }
 
-  const renderFields = (list: Field[], path: number[] = []) =>
-    list.map((field, idx) => {
-      const currentPath = [...path, idx];
+  function render(obj: SchemaObject, path: string[] = []) {
+    return Object.entries(obj).map(([key, val]) => {
+      const t = getType(val);
+      const curPath = [...path, key];
+      const pathKey = curPath.join(".");
+
       return (
         <Card
-          key={currentPath.join("-")}
           size="small"
-          style={{ marginBottom: 12, marginLeft: path.length * 20 }}
+          key={pathKey}
+          style={{ marginBottom: 10, marginLeft: path.length * 20 }}
         >
           <Space>
             <Input
-              placeholder="Key"
-              value={field.key}
+              value={editingKeys[pathKey] ?? key}
               onChange={(e) =>
-                handleFieldChange(currentPath, "key", e.target.value)
+                setEditingKeys(prev => ({ ...prev, [pathKey]: e.target.value }))
               }
+              onBlur={() => renameField(curPath, editingKeys[pathKey] ?? key)}
               style={{ width: 150 }}
             />
             <Select
-              value={field.type}
-              onChange={(val) => handleFieldChange(currentPath, "type", val)}
-              style={{ width: 120 }}
+              value={t}
+              onChange={(v) => changeType(curPath, v as FieldType)}
+              style={{ width: 110 }}
             >
               <Option value="String">String</Option>
               <Option value="Number">Number</Option>
@@ -111,18 +101,17 @@ const StructureBuilder: React.FC<Props> = ({ data, onChange }) => {
             <Button
               danger
               icon={<DeleteOutlined />}
-              onClick={() => handleDelete(currentPath)}
+              onClick={() => removeField(curPath)}
             />
           </Space>
-
-          {field.type === "Nested" && (
-            <div style={{ marginTop: 12 }}>
-              {renderFields(field.children || [], currentPath)}
+          {t === "Nested" && (
+            <div style={{ marginTop: 10 }}>
+              {render(val as SchemaObject, curPath)}
               <Button
                 icon={<PlusOutlined />}
                 size="small"
-                onClick={() => handleAddField(currentPath)}
                 style={{ marginTop: 8 }}
+                onClick={() => addField(curPath)}
               >
                 Add Nested Field
               </Button>
@@ -131,14 +120,20 @@ const StructureBuilder: React.FC<Props> = ({ data, onChange }) => {
         </Card>
       );
     });
+  }
+
+  function addRoot() {
+    const cloned = { ...data, [``]: "String" };
+    onChange(cloned);
+  }
 
   return (
     <div>
-      {renderFields(fields)}
+      {render(data)}
       <Button
         type="primary"
         icon={<PlusOutlined />}
-        onClick={() => update([...fields, { key: "", type: "String" }])}
+        onClick={addRoot}
         style={{ marginTop: 12 }}
       >
         Add Field
