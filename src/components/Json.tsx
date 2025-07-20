@@ -1,3 +1,29 @@
+//using JSON.strringify
+
+import type React from "react";
+import { Card } from "antd";
+
+interface JsonRendererProps {
+  data: any;
+  indent?: number;
+  isLast?: boolean;
+}
+
+const JsonRenderer: React.FC<JsonRendererProps> = ({ data }) => {
+  return (
+    <Card title="Generated Structure" style={{ marginTop: 20 }}>
+      <pre>{JSON.stringify(data,null,2)}</pre>
+    </Card>
+  );
+};
+
+export default JsonRenderer;
+
+/*
+
+##Using recursion
+
+
 import type React from "react";
 import { Typography } from "antd";
 const { Text } = Typography;
@@ -57,3 +83,4 @@ const JsonRenderer: React.FC<JsonRendererProps> = ({ data, isLast = true }) => {
 };
 
 export default JsonRenderer;
+*/

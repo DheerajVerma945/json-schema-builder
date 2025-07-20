@@ -1,37 +1,26 @@
-import React from "react";
-import JsonRenderer from "./components/Json";
+import { useState } from "react";
 import { Card } from "antd";
-
-const data = {
-  name: "Dheeraj",
-  age: 21,
-  address: {
-    city: "Delhi",
-    country: {
-      code: "+91",
-      name:"India"
-    },
-    pincode: 110001,
-  },
-  hobbies: ["music", ["CCSU", "Undergraduate", ["12th", "10th"]]],
-};
+import StructureBuilder from "./components/Input";
+import JsonRenderer from "./components/Json";
 
 const App = () => {
+  const [data, setData] = useState([]);
+
   return (
     <div
       style={{
         display: "flex",
         flexDirection: "row",
-        justifyItems: "center",
-        alignItems: "center",
+        alignItems: "flex-start",
         gap: 20,
-        width: "50vw",
+        width: "90vw",
         padding: 20,
       }}
     >
-      {/* JSON Builder is yet to create */}
-      <Card style={{ flex: 1 }}>Hii</Card>
-      <Card style={{ flex: 2 }}>
+      <Card style={{ flex: 1 }}>
+        <StructureBuilder data={data} onChange={setData} />
+      </Card>
+      <Card style={{ flex: 1 }}>
         <JsonRenderer data={data} />
       </Card>
     </div>
