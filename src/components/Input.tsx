@@ -16,12 +16,17 @@ interface StructureBuilderProps {
 const getType = (val: SchemaValue): FieldType =>
   typeof val === "object" && val !== null ? "Nested" : (val as FieldType);
 
-const StructureBuilder: React.FC<StructureBuilderProps> = ({ data, onChange }) => {
-  const [editingKeys, setEditingKeys] = useState<{ [path: string]: string }>({});
+const StructureBuilder: React.FC<StructureBuilderProps> = ({
+  data,
+  onChange,
+}) => {
+  const [editingKeys, setEditingKeys] = useState<{ [path: string]: string }>(
+    {}
+  );
 
   function renameField(path: string[], newKey: string) {
     const pathKey = path.join(".");
-    setEditingKeys(prev => ({ ...prev, [pathKey]: newKey }));
+    setEditingKeys((prev) => ({ ...prev, [pathKey]: newKey }));
 
     const oldKey = path[path.length - 1];
     if (newKey === oldKey || !newKey) return;
@@ -34,7 +39,7 @@ const StructureBuilder: React.FC<StructureBuilderProps> = ({ data, onChange }) =
     delete obj[oldKey];
     obj[newKey] = val;
 
-    setEditingKeys(prev => {
+    setEditingKeys((prev) => {
       const updated = { ...prev };
       delete updated[pathKey];
       return updated;
@@ -84,7 +89,10 @@ const StructureBuilder: React.FC<StructureBuilderProps> = ({ data, onChange }) =
             <Input
               value={editingKeys[pathKey] ?? key}
               onChange={(e) =>
-                setEditingKeys(prev => ({ ...prev, [pathKey]: e.target.value }))
+                setEditingKeys((prev) => ({
+                  ...prev,
+                  [pathKey]: e.target.value,
+                }))
               }
               onBlur={() => renameField(curPath, editingKeys[pathKey] ?? key)}
               style={{ width: 150 }}
@@ -123,7 +131,7 @@ const StructureBuilder: React.FC<StructureBuilderProps> = ({ data, onChange }) =
   }
 
   function addRoot() {
-    const cloned = { ...data, [``]: "String" };
+    const cloned = { ...data, [``]: "String" as FieldType };
     onChange(cloned);
   }
 
